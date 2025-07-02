@@ -1,5 +1,18 @@
-# Vue 3 + Vite
+# Werewolf Game
+A real-time multiplayer Werewolf game made using Socket.io
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## About
+- Two languages available (English, Chinese)
+- Real-time multiplayer game
+- Supports up to 8 players at once in a room, multiple rooms can be created
+- Lightweight, runs on old devices to (no fancy animation yet amazing design)
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## Demo
+![Chat](./images/chat.webp)
+![Lobby in Chinese](./images/lobby%20chinese.webp)
+![Villager in Chinese](./images/villager%20in%20game%20chinese.webp)
+![Werewolf in game](./images/werewolf%20in%20game.webp)
+![Witch in game](./images/witch.webp)
+
+## License
+This project is available as an open source under the terms of the [MIT License](/LICENSE)
