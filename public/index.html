@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>狼人杀 Werewolf Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .game-font { 
+            font-family: 'Rajdhani', 'Noto Sans SC', sans-serif; 
+            font-weight: 500;
+        }
+        .title-font { 
+            font-family: 'Orbitron', 'Noto Sans SC', monospace; 
+            font-weight: 900;
+            letter-spacing: 0.1em;
+        }
+        .header-font { 
+            font-family: 'Orbitron', 'Noto Sans SC', monospace; 
+            font-weight: 700;
+        }
+        
+        .moon-glow {
+            background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: moon-glow 3s ease-in-out infinite;
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+        
+        @keyframes moon-glow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3)); }
+            50% { filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.8)); }
+        }
+        
+        .werewolf-glow {
+            background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: werewolf-glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes werewolf-glow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.4)); }
+            50% { filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.8)); }
+        }
+        
+        .night-bg {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+        }
+        
+        .day-bg {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+        }
+        
+        .shadow-glow {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .pulse-blue {
+            animation: pulse-blue 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-blue {
+            0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.6); }
+        }
+        
+        .text-glow {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            border: 2px solid #60a5fa;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border: 2px solid #ef4444;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            transform: translateY(-2px);
+        }
+
+        .role-werewolf { color: #ef4444; }
+        .role-seer { color: #8b5cf6; }
+        .role-doctor { color: #10b981; }
+        .role-villager { color: #6b7280; }
+        .role-witch { color: #3b82f6; }
+        .role-hunter { color: #f97316; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div class="fixed top-4 right-4 z-50">
+        <button id="lang-toggle" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg border border-gray-600 game-font text-sm transition-colors">
+            中文
+        </button>
+    </div>
+
+    <div id="main-menu" class="min-h-screen flex items-center justify-center night-bg">
+        <div class="text-center space-y-8 p-8 max-w-md mx-auto">
+            <h1 class="title-font text-4xl md:text-6xl text-blue-400 mb-8 moon-glow">
+                <span data-en="WEREWOLF" data-zh="狼人杀">狼人杀</span>
+            </h1>
+            <p class="game-font text-xl text-gray-100 font-semibold text-glow">
+                <span data-en="A social deduction game of mystery and betrayal" data-zh="一个充满神秘与背叛的社交推理游戏">一个充满神秘与背叛的社交推理游戏</span>
+            </p>
+            
+            <div class="space-y-4">
+                <input 
+                    type="text" 
+                    id="player-name" 
+                    data-placeholder-en="Enter your name..." 
+                    data-placeholder-zh="输入你的名字..."
+                    placeholder="输入你的名字..."
+                    class="w-full px-4 py-3 bg-gray-800 border-2 border-blue-500 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 game-font text-lg"
+                    maxlength="20"
+                >
+                
+                <input 
+                    type="text" 
+                    id="room-id" 
+                    data-placeholder-en="Room ID (leave empty for random)" 
+                    data-placeholder-zh="房间号 (留空随机生成)"
+                    placeholder="房间号 (留空随机生成)"
+                    class="w-full px-4 py-3 bg-gray-800 border-2 border-blue-500 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 game-font text-lg"
+                    maxlength="10"
+                >
+                
+                <button 
+                    id="join-game" 
+                    class="w-full btn-primary px-8 py-4 rounded-lg font-bold text-xl transition-all duration-300 shadow-glow hover:shadow-xl game-font pulse-blue text-white"
+                >
+                    <span data-en="JOIN GAME" data-zh="加入游戏">加入游戏</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-lobby" class="hidden min-h-screen night-bg p-4">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-8">
+                <h2 class="header-font text-4xl text-blue-400 mb-2 text-glow">
+                    <span data-en="WAITING ROOM" data-zh="等待房间">等待房间</span>
+                </h2>
+                <p class="game-font text-xl text-gray-200">
+                    <span data-en="Room ID" data-zh="房间号">房间号</span>: <span id="current-room-id" class="text-blue-400 font-bold"></span>
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-gray-800 rounded-lg p-6 border-2 border-blue-500">
+                    <h3 class="game-font text-2xl text-blue-400 mb-4 font-bold">
+                        <span data-en="Players in Room" data-zh="房间内玩家">房间内玩家</span>
+                    </h3>
+                    <div id="lobby-players" class="space-y-2"></div>
+                </div>
+                
+                <div class="bg-gray-800 rounded-lg p-6 border-2 border-blue-500">
+                    <h3 class="game-font text-2xl text-blue-400 mb-4 font-bold">
+                        <span data-en="Game Rules" data-zh="游戏规则">游戏规则</span>
+                    </h3>
+                    <ul class="text-lg text-gray-200 space-y-2 game-font">
+                        <li data-en="• Werewolves eliminate villagers at night" data-zh="• 狼人在夜晚消灭村民">• Werewolves eliminate villagers at night</li>
+                        <li data-en="• Villagers vote to eliminate suspects during day" data-zh="• 村民在白天投票消灭嫌疑人">• Villagers vote to eliminate suspects during day</li>
+                        <li data-en="• Seer can check one player's identity each night" data-zh="• 预言家每晚可以查验一个玩家身份">• Seer can check one player's identity each night</li>
+                        <li data-en="• Doctor can save one player from elimination" data-zh="• 医生可以拯救一个玩家免于死亡">• Doctor can save one player from elimination</li>
+                        <li data-en="• Witch has poison and antidote (one-time use each)" data-zh="• 女巫拥有毒药和解药（各一次）">• Witch has poison and antidote (one-time use each)</li>
+                        <li data-en="• Hunter can eliminate one player when voted out" data-zh="• 猎人被投票出局时可以带走一个玩家">• Hunter can eliminate one player when voted out</li>
+                        <li data-en="• AI provides behavior analysis for special roles" data-zh="• AI为特殊角色提供行为分析">• AI provides behavior analysis for special roles</li>
+                        <li data-en="• Villagers win by eliminating all werewolves" data-zh="• 村民通过消灭所有狼人获胜">• Villagers win by eliminating all werewolves</li>
+                        <li data-en="• Werewolves win by outnumbering villagers" data-zh="• 狼人通过数量超过村民获胜">• Werewolves win by outnumbering villagers</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="text-center mt-8">
+                <button 
+                    id="start-game-btn" 
+                    class="btn-primary px-8 py-4 rounded-lg font-bold text-xl transition-all duration-300 shadow-glow hover:shadow-xl game-font pulse-blue text-white"
+                >
+                    <span data-en="START GAME" data-zh="开始游戏">开始游戏</span>
+                </button>
+                <p class="text-lg text-gray-300 mt-2 game-font">
+                    <span data-en="Minimum 4 players required (8+ recommended for Hunter)" data-zh="至少需要4名玩家（推荐8人以上包含猎人）">Minimum 4 players required (8+ recommended for Hunter)</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-screen" class="hidden min-h-screen">
+        <div id="game-header" class="bg-gray-800 border-b-2 border-blue-500 p-4">
+            <div class="max-w-6xl mx-auto flex justify-between items-center">
+                <div>
+                    <h2 class="header-font text-2xl text-blue-400">
+                        <span data-en="WEREWOLF" data-zh="狼人杀">狼人杀</span>
+                    </h2>
+                    <p class="game-font text-lg text-gray-200">
+                        <span data-en="Round" data-zh="第">第</span> <span id="game-phase">1</span> <span data-en="" data-zh="轮">轮</span>
+                    </p>
+                </div>
+                
+                <div class="text-center">
+                    <div id="game-status" class="game-font text-xl text-yellow-400 font-bold"></div>
+                    <div id="timer" class="text-3xl font-bold text-blue-400 header-font"></div>
+                </div>
+                
+                <div class="text-right">
+                    <div id="role-display" class="game-font text-xl font-bold"></div>
+                    <div class="text-lg text-gray-300 game-font">
+                        <span data-en="Your Role" data-zh="你的身份">你的身份</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-6xl mx-auto p-4 grid lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1">
+                <div class="bg-gray-800 rounded-lg p-4 border-2 border-blue-500">
+                    <h3 class="game-font text-2xl text-blue-400 mb-4 font-bold">
+                        <span data-en="Players" data-zh="玩家">玩家</span>
+                    </h3>
+                    <div id="game-players" class="space-y-2"></div>
+                </div>
+                
+                <div id="night-actions-panel" class="hidden bg-gray-800 rounded-lg p-4 border-2 border-purple-500 mt-4">
+                    <h3 class="game-font text-2xl text-purple-400 mb-4 font-bold">
+                        <span data-en="Night Actions" data-zh="夜晚行动">夜晚行动</span>
+                    </h3>
+                    <div id="night-actions" class="space-y-2"></div>
+                </div>
+                
+                <div id="voting-panel" class="hidden bg-gray-800 rounded-lg p-4 border-2 border-red-500 mt-4">
+                    <h3 class="game-font text-2xl text-red-400 mb-4 font-bold">
+                        <span data-en="Vote to Eliminate" data-zh="投票消灭">投票消灭</span>
+                    </h3>
+                    <div id="voting-options" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="bg-gray-800 rounded-lg border-2 border-blue-500 h-96 flex flex-col">
+                    <div class="p-4 border-b-2 border-gray-700">
+                        <h3 class="game-font text-2xl text-blue-400 font-bold">
+                            <span data-en="Discussion" data-zh="讨论">讨论</span>
+                        </h3>
+                    </div>
+                    
+                    <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-2"></div>
+                    
+                    <div id="chat-input-container" class="p-4 border-t-2 border-gray-700">
+                        <div class="flex space-x-2">
+                            <input 
+                                type="text" 
+                                id="chat-input" 
+                                data-placeholder-en="Share your thoughts..." 
+                                data-placeholder-zh="分享你的想法..."
+                                placeholder="分享你的想法..."
+                                class="flex-1 px-3 py-2 bg-gray-700 border-2 border-gray-600 rounded text-white placeholder-gray-300 focus:outline-none focus:border-blue-400 game-font text-lg"
+                                maxlength="200"
+                            >
+                            <button 
+                                id="send-message" 
+                                class="btn-primary px-6 py-2 rounded font-bold transition-colors game-font text-lg"
+                            >
+                                <span data-en="Send" data-zh="发送">发送</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="game-events" class="bg-gray-800 rounded-lg p-4 border-2 border-yellow-500 mt-4">
+                    <h3 class="game-font text-xl text-yellow-400 mb-2 font-bold">
+                        <span data-en="Game Events" data-zh="游戏事件">游戏事件</span>
+                    </h3>
+                    <div id="events-list" class="text-sm text-gray-300 space-y-1 max-h-32 overflow-y-auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-over" class="hidden min-h-screen flex items-center justify-center night-bg">
+        <div class="text-center space-y-8 p-8">
+            <h1 id="game-result" class="title-font text-5xl md:text-7xl mb-8"></h1>
+            <p id="game-result-text" class="game-font text-2xl text-gray-100 max-w-md mx-auto font-semibold text-glow"></p>
+            
+            <div id="final-roles" class="bg-gray-800 rounded-lg p-6 border-2 border-blue-500 max-w-md mx-auto">
+                <h3 class="game-font text-xl text-blue-400 mb-4 font-bold">
+                    <span data-en="Final Roles" data-zh="最终身份">最终身份</span>
+                </h3>
+                <div id="roles-reveal" class="space-y-2"></div>
+            </div>
+            
+            <button 
+                id="play-again" 
+                class="btn-primary px-8 py-4 rounded-lg font-bold text-xl transition-all duration-300 shadow-glow hover:shadow-xl game-font pulse-blue text-white"
+            >
+                <span data-en="PLAY AGAIN" data-zh="再玩一局">再玩一局</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
