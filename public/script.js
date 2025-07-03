@@ -14,32 +14,30 @@ class WerewolfGame {
     this.bindEvents();
     this.setupSocketListeners();
     this.updateLanguage();
-
-    console.log("Werewolf game initialized successfully");
   }
 
   initializeElements() {
-    this.langToggle = document.getElementById("lang-toggle");
-    this.mainMenu = document.getElementById("main-menu");
-    this.playerNameInput = document.getElementById("player-name");
-    this.roomIdInput = document.getElementById("room-id");
-    this.joinGameBtn = document.getElementById("join-game");
-    this.gameLobby = document.getElementById("game-lobby");
-    this.currentRoomId = document.getElementById("current-room-id");
-    this.lobbyPlayers = document.getElementById("lobby-players");
-    this.startGameBtn = document.getElementById("start-game-btn");
+    this.langToggle = document.getElementById("lang-toggle"); // Language toggle button
+    this.mainMenu = document.getElementById("main-menu"); // Main menu container
+    this.playerNameInput = document.getElementById("player-name"); // Player name input field
+    this.roomIdInput = document.getElementById("room-id"); // Room ID input field
+    this.joinGameBtn = document.getElementById("join-game"); // Join game button
+    this.gameLobby = document.getElementById("game-lobby"); // Game lobby container
+    this.currentRoomId = document.getElementById("current-room-id"); 
+    this.lobbyPlayers = document.getElementById("lobby-players"); // Lobby players list
+    this.startGameBtn = document.getElementById("start-game-btn"); // Start game button
     this.gameScreen = document.getElementById("game-screen");
-    this.gameHeader = document.getElementById("game-header");
-    this.gamePhase = document.getElementById("game-phase");
-    this.gameStatus = document.getElementById("game-status");
-    this.timer = document.getElementById("timer");
-    this.roleDisplay = document.getElementById("role-display");
-    this.gamePlayers = document.getElementById("game-players");
-    this.nightActionsPanel = document.getElementById("night-actions-panel");
-    this.nightActions = document.getElementById("night-actions");
-    this.votingPanel = document.getElementById("voting-panel");
-    this.votingOptions = document.getElementById("voting-options");
-    this.chatMessages = document.getElementById("chat-messages");
+    this.gameHeader = document.getElementById("game-header"); // Game header container
+    this.gamePhase = document.getElementById("game-phase"); // Current game phase display
+    this.gameStatus = document.getElementById("game-status"); // Game status display
+    this.timer = document.getElementById("timer"); // Timer display
+    this.roleDisplay = document.getElementById("role-display"); 
+    this.gamePlayers = document.getElementById("game-players"); // Game players list
+    this.nightActionsPanel = document.getElementById("night-actions-panel"); // Night actions panel
+    this.nightActions = document.getElementById("night-actions"); // Night actions container
+    this.votingPanel = document.getElementById("voting-panel"); // Voting panel container 
+    this.votingOptions = document.getElementById("voting-options"); // Voting options container
+    this.chatMessages = document.getElementById("chat-messages"); // Chat messages container
     this.chatInput = document.getElementById("chat-input");
     this.sendMessageBtn = document.getElementById("send-message");
     this.chatInputContainer = document.getElementById("chat-input-container");
@@ -57,7 +55,6 @@ class WerewolfGame {
   bindEvents() {
     this.langToggle.addEventListener("click", () => this.toggleLanguage());
     this.joinGameBtn.addEventListener("click", () => {
-      console.log("Join game button clicked");
       this.joinGame();
     });
     this.startGameBtn.addEventListener("click", () => this.startGame());
@@ -72,7 +69,6 @@ class WerewolfGame {
     this.chatInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter") this.sendMessage();
     });
-    console.log("Events bound successfully");
   }
 
   setupSocketListeners() {
